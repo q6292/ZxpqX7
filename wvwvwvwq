@@ -1,0 +1,100 @@
+--// Fake Key System GUI (Draggable + Copy Invite + Fake Key Check)
+-- LocalScript
+
+-- Services
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "🔑 Key System"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Parent = MainFrame
+
+-- Fake Key Input
+local KeyBox = Instance.new("TextBox")
+KeyBox.Size = UDim2.new(0.8, 0, 0, 30)
+KeyBox.Position = UDim2.new(0.1, 0, 0.4, 0)
+KeyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeyBox.Text = ""
+KeyBox.PlaceholderText = "Enter key here..."
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 14
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.Parent = MainFrame
+
+-- Copy Invite Button
+local CopyBtn = Instance.new("TextButton")
+CopyBtn.Size = UDim2.new(0.8, 0, 0, 30)
+CopyBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
+CopyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+CopyBtn.Text = "📋 Copy Discord Invite"
+CopyBtn.Font = Enum.Font.GothamBold
+CopyBtn.TextSize = 14
+CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyBtn.Parent = MainFrame
+
+-- Corner Rounding
+local function roundify(obj, radius)
+	local UICorner = Instance.new("UICorner")
+	UICorner.CornerRadius = UDim.new(0, radius)
+	UICorner.Parent = obj
+end
+
+roundify(MainFrame, 10)
+roundify(Title, 10)
+roundify(KeyBox, 8)
+roundify(CopyBtn, 8)
+
+-- Discord Invite
+local invite = "https://discord.gg/XadvywTCsh" -- change this
+
+CopyBtn.MouseButton1Click:Connect(function()
+	setclipboard(invite)
+	StarterGui:SetCore("SendNotification", {
+		Title = "Copied!",
+		Text = "Discord invite copied to clipboard.",
+		Duration = 3
+	})
+end)
+
+-- Fake Key System
+local fakeKey = "rua-Fg9J5" -- change this to whatever key you want
+
+KeyBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then
+		if KeyBox.Text == fakeKey then
+			StarterGui:SetCore("SendNotification", {
+				Title = "Success",
+				Text = "Key Accepted!",
+				Duration = 3
+			})
+			MainFrame:Destroy() -- removes the GUI when correct key is entered
+		else
+			StarterGui:SetCore("SendNotification", {
+				Title = "Invalid",
+				Text = "Wrong key!",
+				Duration = 3
+			})
+		end
+	end
+end)
