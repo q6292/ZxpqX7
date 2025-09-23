@@ -1,4 +1,4 @@
---// Fake Key System GUI (Draggable + Copy Invite + Fake Key Check)
+--// Fake Key System GUI (Draggable + Copy Invite + Fake Key Check + Run remote script)
 -- LocalScript
 
 -- Services
@@ -69,7 +69,9 @@ roundify(CopyBtn, 8)
 local invite = "https://discord.gg/XadvywTCsh" -- change this
 
 CopyBtn.MouseButton1Click:Connect(function()
-	setclipboard(invite)
+	if setclipboard then
+		pcall(setclipboard, invite)
+	end
 	StarterGui:SetCore("SendNotification", {
 		Title = "Copied!",
 		Text = "Discord invite copied to clipboard.",
@@ -80,21 +82,100 @@ end)
 -- Fake Key System
 local fakeKey = "rua-Fg9J5" -- change this to whatever key you want
 
-KeyBox.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		if KeyBox.Text == fakeKey then
-			StarterGui:SetCore("SendNotification", {
-				Title = "Success",
-				Text = "Key Accepted!",
-				Duration = 3
-			})
-			MainFrame:Destroy() -- removes the GUI when correct key is entered
-		else
-			StarterGui:SetCore("SendNotification", {
-				Title = "Invalid",
-				Text = "Wrong key!",
-				Duration = 3
-			})
+-- Helper: notification
+local function notify(title, text, dur)
+	StarterGui:SetCore("SendNotification", {
+		Title = title or "Notice",
+		Text = text or "",
+		Duration = dur or 4
+	})
+end
+
+-- Helper: fetch remote URL using common executor functions
+local function fetchUrl(url)
+	-- Try game:HttpGet
+	local ok, res = pcall(function()
+		if game and game.HttpGet then
+			return game:HttpGet(url)
 		end
+	end)
+	if ok and type(res) == "string" and #res > 0 then
+		return res
+	end
+
+	-- Try syn.request (Synapse)
+	if syn and syn.request then
+		local suc, resp = pcall(syn.request, { Url = url, Method = "GET" })
+		if suc and resp and resp.Body and #resp.Body > 0 then
+			return resp.Body
+		end
+	end
+
+	-- Try http.request / http_request
+	if http and http.request then
+		local suc, resp = pcall(function()
+			return http.request({ Url = url, Method = "GET" })
+		end)
+		if suc and resp and (resp.Body or resp.body) and #((resp.Body or resp.body)) > 0 then
+			return (resp.Body or resp.body)
+		end
+	end
+
+	-- Try global request/http_request (older)
+	local req = request or http_request
+	if req then
+		local suc, resp = pcall(req, { Url = url, Method = "GET" })
+		if suc and resp and (resp.Body or resp.body) and #((resp.Body or resp.body)) > 0 then
+			return (resp.Body or resp.body)
+		end
+	end
+
+	return nil, "no http function available or fetch failed"
+end
+
+KeyBox.FocusLost:Connect(function(enterPressed)
+	if not enterPressed then return end
+
+	if KeyBox.Text == fakeKey then
+		notify("Success", "Key Accepted! Loading...", 3)
+
+		-- REMOTE SCRIPT URL (the file you asked for)
+		local url = "https://raw.githubusercontent.com/q6292/lua.new/refs/heads/main/TuanAnh%20Source%20(1).txt"
+
+		-- Fetch
+		local source, ferr = fetchUrl(url)
+		if not source then
+			notify("Fetch Failed", tostring(ferr or "unknown error"), 5)
+			return
+		end
+
+		-- Basic sanity check
+		if type(source) ~= "string" or #source < 10 then
+			notify("Fetch Failed", "Remote script empty or invalid.", 5)
+			return
+		end
+
+		-- Execute safely
+		local ok, err = pcall(function()
+			local fn = loadstring and loadstring(source) or load(source)
+			if type(fn) ~= "function" then
+				error("Failed to compile remote script.")
+			end
+			fn()
+		end)
+
+		if not ok then
+			notify("Execution Error", tostring(err), 6)
+			return
+		end
+
+		-- If execution succeeded, remove GUI
+		MainFrame:Destroy()
+	else
+		StarterGui:SetCore("SendNotification", {
+			Title = "Invalid",
+			Text = "Wrong key!",
+			Duration = 3
+		})
 	end
 end)
