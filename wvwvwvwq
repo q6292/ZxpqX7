@@ -66,7 +66,7 @@ roundify(KeyBox, 8)
 roundify(CopyBtn, 8)
 
 -- Discord Invite
-local invite = "https://discord.gg/mQcSYrjQjw" -- change this
+local invite = "https://discord.gg/8nMgk85dxn" -- change this
 
 CopyBtn.MouseButton1Click:Connect(function()
 	if setclipboard then
