@@ -140,7 +140,7 @@ KeyBox.FocusLost:Connect(function(enterPressed)
 		notify("Success", "Key Accepted! Loading...", 3)
 
 		-- REMOTE SCRIPT URL (the file you asked for)
-		local url = "https://raw.githubusercontent.com/q6292/lua.new/refs/heads/main/TuanAnh%20Source%20(1).txt"
+		local url = "https://raw.githubusercontent.com/q6292/mK7Vr/refs/heads/main/Protected_9641380257443213.lua.txt"
 
 		-- Fetch
 		local source, ferr = fetchUrl(url)
