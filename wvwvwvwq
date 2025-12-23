@@ -140,7 +140,7 @@ KeyBox.FocusLost:Connect(function(enterPressed)
 		notify("Success", "Key Accepted! Loading...", 3)
 
 		-- REMOTE SCRIPT URL (the file you asked for)
-		local url = "https://raw.githubusercontent.com/q6292/0xy/refs/heads/main/vxeze-hub%20old%20(open%20source).txt"
+		local url = "https://raw.githubusercontent.com/q6292/claudevv/refs/heads/main/cclaudee96"
 
 		-- Fetch
 		local source, ferr = fetchUrl(url)
