@@ -80,7 +80,7 @@ CopyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Fake Key System
-local fakeKey = "rua-Fg9J5" -- change this to whatever key you want
+local fakeKey = "jcq-96" -- change this to whatever key you want
 
 -- Helper: notification
 local function notify(title, text, dur)
