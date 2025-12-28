@@ -1,10 +1,9 @@
---// Fake Key System GUI (Draggable + Copy Invite + Fake Key Check + Run remote script)
+--// Fake Key System GUI (Draggable + Copy Invite + Get Key + Fake Key Check + Run remote script)
 -- LocalScript
 
 -- Services
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
-
 local player = Players.LocalPlayer
 
 -- GUI Setup
@@ -12,8 +11,8 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 150)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+MainFrame.Size = UDim2.new(0, 300, 0, 190)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -95)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -30,22 +29,21 @@ Title.TextSize = 18
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Parent = MainFrame
 
--- Fake Key Input
+-- Key Input
 local KeyBox = Instance.new("TextBox")
 KeyBox.Size = UDim2.new(0.8, 0, 0, 30)
-KeyBox.Position = UDim2.new(0.1, 0, 0.4, 0)
+KeyBox.Position = UDim2.new(0.1, 0, 0.32, 0)
 KeyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-KeyBox.Text = ""
 KeyBox.PlaceholderText = "Enter key here..."
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextSize = 14
 KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 KeyBox.Parent = MainFrame
 
--- Copy Invite Button
+-- Copy Discord Invite Button
 local CopyBtn = Instance.new("TextButton")
 CopyBtn.Size = UDim2.new(0.8, 0, 0, 30)
-CopyBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
+CopyBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
 CopyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 CopyBtn.Text = "📋 Copy Discord Invite"
 CopyBtn.Font = Enum.Font.GothamBold
@@ -53,7 +51,18 @@ CopyBtn.TextSize = 14
 CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CopyBtn.Parent = MainFrame
 
--- Corner Rounding
+-- Get Key Button
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(0.8, 0, 0, 30)
+GetKeyBtn.Position = UDim2.new(0.1, 0, 0.78, 0)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+GetKeyBtn.Text = "🔗 Get Key"
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.TextSize = 14
+GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyBtn.Parent = MainFrame
+
+-- Rounded corners
 local function roundify(obj, radius)
 	local UICorner = Instance.new("UICorner")
 	UICorner.CornerRadius = UDim.new(0, radius)
@@ -64,103 +73,76 @@ roundify(MainFrame, 10)
 roundify(Title, 10)
 roundify(KeyBox, 8)
 roundify(CopyBtn, 8)
+roundify(GetKeyBtn, 8)
 
--- Discord Invite
-local invite = "https://discord.gg/UNTcftjkxp" -- change this
+-- Links
+local discordInvite = "" -- put your discord invite here
+local getKeyLink = "https://link-center.net/2570526/gFWrKlqEeJyr"
 
-CopyBtn.MouseButton1Click:Connect(function()
-	if setclipboard then
-		pcall(setclipboard, invite)
-	end
-	StarterGui:SetCore("SendNotification", {
-		Title = "Copied!",
-		Text = "Discord invite copied to clipboard.",
-		Duration = 3
-	})
-end)
-
--- Fake Key System
-local fakeKey = "jcq-96" -- change this to whatever key you want
-
--- Helper: notification
+-- Notifications
 local function notify(title, text, dur)
 	StarterGui:SetCore("SendNotification", {
-		Title = title or "Notice",
-		Text = text or "",
+		Title = title,
+		Text = text,
 		Duration = dur or 4
 	})
 end
 
--- Helper: fetch remote URL using common executor functions
+-- Copy Discord
+CopyBtn.MouseButton1Click:Connect(function()
+	if setclipboard then
+		pcall(setclipboard, discordInvite)
+	end
+	notify("Copied!", "Discord invite copied.", 3)
+end)
+
+-- Copy Get Key
+GetKeyBtn.MouseButton1Click:Connect(function()
+	if setclipboard then
+		pcall(setclipboard, getKeyLink)
+	end
+	notify("Get Key Link Has Been Copied", "Paste it in your browser to get key", 4)
+end)
+
+-- Fake Key
+local fakeKey = "jcq-96"
+
+-- HTTP Fetch
 local function fetchUrl(url)
-	-- Try game:HttpGet
 	local ok, res = pcall(function()
-		if game and game.HttpGet then
-			return game:HttpGet(url)
-		end
+		return game:HttpGet(url)
 	end)
-	if ok and type(res) == "string" and #res > 0 then
-		return res
-	end
+	if ok and res then return res end
 
-	-- Try syn.request (Synapse)
 	if syn and syn.request then
-		local suc, resp = pcall(syn.request, { Url = url, Method = "GET" })
-		if suc and resp and resp.Body and #resp.Body > 0 then
-			return resp.Body
-		end
+		local r = syn.request({Url = url, Method = "GET"})
+		return r and r.Body
 	end
 
-	-- Try http.request / http_request
-	if http and http.request then
-		local suc, resp = pcall(function()
-			return http.request({ Url = url, Method = "GET" })
-		end)
-		if suc and resp and (resp.Body or resp.body) and #((resp.Body or resp.body)) > 0 then
-			return (resp.Body or resp.body)
-		end
-	end
-
-	-- Try global request/http_request (older)
 	local req = request or http_request
 	if req then
-		local suc, resp = pcall(req, { Url = url, Method = "GET" })
-		if suc and resp and (resp.Body or resp.body) and #((resp.Body or resp.body)) > 0 then
-			return (resp.Body or resp.body)
-		end
+		local r = req({Url = url, Method = "GET"})
+		return r and (r.Body or r.body)
 	end
-
-	return nil, "no http function available or fetch failed"
 end
 
+-- Key Check
 KeyBox.FocusLost:Connect(function(enterPressed)
 	if not enterPressed then return end
 
 	if KeyBox.Text == fakeKey then
 		notify("Success", "Key Accepted! Loading...", 3)
 
-		-- REMOTE SCRIPT URL (the file you asked for)
 		local url = "https://raw.githubusercontent.com/q6292/claudevv/refs/heads/main/cclaudee96"
+		local source = fetchUrl(url)
 
-		-- Fetch
-		local source, ferr = fetchUrl(url)
-		if not source then
-			notify("Fetch Failed", tostring(ferr or "unknown error"), 5)
+		if not source or #source < 10 then
+			notify("Error", "Failed to load script.", 5)
 			return
 		end
 
-		-- Basic sanity check
-		if type(source) ~= "string" or #source < 10 then
-			notify("Fetch Failed", "Remote script empty or invalid.", 5)
-			return
-		end
-
-		-- Execute safely
 		local ok, err = pcall(function()
-			local fn = loadstring and loadstring(source) or load(source)
-			if type(fn) ~= "function" then
-				error("Failed to compile remote script.")
-			end
+			local fn = loadstring(source)
 			fn()
 		end)
 
@@ -169,13 +151,8 @@ KeyBox.FocusLost:Connect(function(enterPressed)
 			return
 		end
 
-		-- If execution succeeded, remove GUI
 		MainFrame:Destroy()
 	else
-		StarterGui:SetCore("SendNotification", {
-			Title = "Invalid",
-			Text = "Wrong key!",
-			Duration = 3
-		})
+		notify("Invalid", "Wrong key!", 3)
 	end
 end)
