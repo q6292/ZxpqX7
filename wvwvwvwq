@@ -76,7 +76,7 @@ roundify(CopyBtn, 8)
 roundify(GetKeyBtn, 8)
 
 -- Links
-local discordInvite = "" -- put your discord invite here
+local discordInvite = "https://discord.gg/MRTfx2WArb" -- put your discord invite here
 local getKeyLink = "https://link-center.net/2570526/gFWrKlqEeJyr"
 
 -- Notifications
