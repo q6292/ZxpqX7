@@ -1,158 +1,72 @@
---// Fake Key System GUI (Draggable + Copy Invite + Get Key + Fake Key Check + Run remote script)
--- LocalScript
+-- fly v3 | سكربت طيران للجوال (Delta) - عربي
 
--- Services
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
-local player = Players.LocalPlayer
+local اللاعب = game.Players.LocalPlayer
+local الشخصية = اللاعب.Character or اللاعب.CharacterAdded:Wait()
+local الجذر = الشخصية:WaitForChild("HumanoidRootPart")
+local الإنسان = الشخصية:WaitForChild("Humanoid")
 
--- GUI Setup
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+local تشغيل = game:GetService("RunService")
+local الكاميرا = workspace.CurrentCamera
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 190)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -95)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
+local يطير = false
+local السرعة = 65
 
--- Title
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.Text = "🔑 Key System"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 18
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Parent = MainFrame
+local دفع, توجيه
+local اتصال
 
--- Key Input
-local KeyBox = Instance.new("TextBox")
-KeyBox.Size = UDim2.new(0.8, 0, 0, 30)
-KeyBox.Position = UDim2.new(0.1, 0, 0.32, 0)
-KeyBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-KeyBox.PlaceholderText = "Enter key here..."
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.TextSize = 14
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.Parent = MainFrame
+-- واجهة fly v3
+local واجهة = Instance.new("ScreenGui")
+واجهة.Name = "fly_v3"
+واجهة.Parent = game.CoreGui
 
--- Copy Discord Invite Button
-local CopyBtn = Instance.new("TextButton")
-CopyBtn.Size = UDim2.new(0.8, 0, 0, 30)
-CopyBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
-CopyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-CopyBtn.Text = "📋 Copy Discord Invite"
-CopyBtn.Font = Enum.Font.GothamBold
-CopyBtn.TextSize = 14
-CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CopyBtn.Parent = MainFrame
+local زر = Instance.new("TextButton")
+زر.Parent = واجهة
+زر.Size = UDim2.new(0, 170, 0, 55)
+زر.Position = UDim2.new(0.05, 0, 0.7, 0)
+زر.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+زر.TextColor3 = Color3.fromRGB(255, 255, 255)
+زر.TextScaled = true
+زر.Text = "✈️ fly v3 | تشغيل"
+زر.BorderSizePixel = 0
+زر.Font = Enum.Font.SourceSansBold
 
--- Get Key Button
-local GetKeyBtn = Instance.new("TextButton")
-GetKeyBtn.Size = UDim2.new(0.8, 0, 0, 30)
-GetKeyBtn.Position = UDim2.new(0.1, 0, 0.78, 0)
-GetKeyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-GetKeyBtn.Text = "🔗 Get Key"
-GetKeyBtn.Font = Enum.Font.GothamBold
-GetKeyBtn.TextSize = 14
-GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-GetKeyBtn.Parent = MainFrame
+-- تشغيل الطيران
+local function تشغيل_الطيران()
+	توجيه = Instance.new("BodyGyro", الجذر)
+	توجيه.P = 90000
+	توجيه.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+	توجيه.CFrame = الجذر.CFrame
 
--- Rounded corners
-local function roundify(obj, radius)
-	local UICorner = Instance.new("UICorner")
-	UICorner.CornerRadius = UDim.new(0, radius)
-	UICorner.Parent = obj
-end
+	دفع = Instance.new("BodyVelocity", الجذر)
+	دفع.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+	دفع.Velocity = Vector3.zero
 
-roundify(MainFrame, 10)
-roundify(Title, 10)
-roundify(KeyBox, 8)
-roundify(CopyBtn, 8)
-roundify(GetKeyBtn, 8)
+	الإنسان.PlatformStand = true
 
--- Links
-local discordInvite = "https://discord.gg/k4DQUU4GTP" -- put your discord invite here
-local getKeyLink = "https://link-center.net/2570526/gFWrKlqEeJyr"
-
--- Notifications
-local function notify(title, text, dur)
-	StarterGui:SetCore("SendNotification", {
-		Title = title,
-		Text = text,
-		Duration = dur or 4
-	})
-end
-
--- Copy Discord
-CopyBtn.MouseButton1Click:Connect(function()
-	if setclipboard then
-		pcall(setclipboard, discordInvite)
-	end
-	notify("Copied!", "Discord invite copied.", 3)
-end)
-
--- Copy Get Key
-GetKeyBtn.MouseButton1Click:Connect(function()
-	if setclipboard then
-		pcall(setclipboard, getKeyLink)
-	end
-	notify("Get Key Link Has Been Copied", "Paste it in your browser to get key", 4)
-end)
-
--- Fake Key
-local fakeKey = "jcq-96"
-
--- HTTP Fetch
-local function fetchUrl(url)
-	local ok, res = pcall(function()
-		return game:HttpGet(url)
+	اتصال = تشغيل.RenderStepped:Connect(function()
+		if يطير then
+			توجيه.CFrame = الكاميرا.CFrame
+			دفع.Velocity = الكاميرا.CFrame.LookVector * السرعة
+		end
 	end)
-	if ok and res then return res end
-
-	if syn and syn.request then
-		local r = syn.request({Url = url, Method = "GET"})
-		return r and r.Body
-	end
-
-	local req = request or http_request
-	if req then
-		local r = req({Url = url, Method = "GET"})
-		return r and (r.Body or r.body)
-	end
 end
 
--- Key Check
-KeyBox.FocusLost:Connect(function(enterPressed)
-	if not enterPressed then return end
+-- إيقاف الطيران
+local function إيقاف_الطيران()
+	if اتصال then اتصال:Disconnect() اتصال = nil end
+	if توجيه then توجيه:Destroy() توجيه = nil end
+	if دفع then دفع:Destroy() دفع = nil end
+	الإنسان.PlatformStand = false
+end
 
-	if KeyBox.Text == fakeKey then
-		notify("Success", "Key Accepted! Loading...", 3)
-
-		local url = "https://raw.githubusercontent.com/q6292/claudevv/refs/heads/main/cclaudee96"
-		local source = fetchUrl(url)
-
-		if not source or #source < 10 then
-			notify("Error", "Failed to load script.", 5)
-			return
-		end
-
-		local ok, err = pcall(function()
-			local fn = loadstring(source)
-			fn()
-		end)
-
-		if not ok then
-			notify("Execution Error", tostring(err), 6)
-			return
-		end
-
-		MainFrame:Destroy()
+-- زر التحكم
+زر.MouseButton1Click:Connect(function()
+	يطير = not يطير
+	if يطير then
+		زر.Text = "🛑 fly v3 | إيقاف"
+		تشغيل_الطيران()
 	else
-		notify("Invalid", "Wrong key!", 3)
+		زر.Text = "✈️ fly v3 | تشغيل"
+		إيقاف_الطيران()
 	end
 end)
