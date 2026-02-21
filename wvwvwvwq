@@ -105,7 +105,7 @@ GetKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Fake Key
-local fakeKey = "jcq-96"
+local fakeKey = "jcq-096"
 
 -- HTTP Fetch
 local function fetchUrl(url)
